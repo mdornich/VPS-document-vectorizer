@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Environment variables
+.env
+.env.local
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+config/token.json
+config/token.pickle
+config/credentials.json
+config/client_secrets.json
+logs/
+*.log
+temp/
+/tmp/
+
+# Docker
+docker-compose.override.yml
+
+# Test files
+test_*.py
+debug_*.py
+check_*.py
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.pdf
+*.docx
+*.doc
+*.numbers
+
+# Notebooks
+*.ipynb_checkpoints/

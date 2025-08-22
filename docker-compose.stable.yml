@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  vectorizer-stable:
+    build: .
+    image: document-vectorizer:latest
+    container_name: document-vectorizer-stable
+    restart: unless-stopped
+    env_file:
+      - .env.stable
+    ports:
+      - "8001:5555"  # External port 8001 for dashboard
+    volumes:
+      # Mount credentials and runtime settings (read-write for runtime_settings.json)
+      - ./config:/app/config
+      # Mount templates for dashboard
+      - ./templates:/app/templates:ro
+      # Persistent data storage - expanded paths
+      - stable-vectorizer-data:/app/data
+      - stable-vectorizer-logs:/app/logs
+      - stable-vectorizer-cache:/app/cache
+      # Specific tracker persistence
+      - stable-vectorizer-tracker:/app/data/tracker
+    networks:
+      - stable-vectorizer-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G  # Increased from 2G for better stability
+          cpus: "2.0"
+        reservations:
+          memory: 1G  # Increased base reservation
+          cpus: "0.5"
+    # Health check for monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"  # Increased log file size
+        max-file: "5"    # More log files for debugging
+    # Environment variables for memory optimization
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHON_GC_COLLECT=1
+      # Memory management settings
+      - OMP_NUM_THREADS=2
+      - MALLOC_TRIM_THRESHOLD_=10000
+      - MALLOC_ARENA_MAX=2
+    # System resource limits
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    # User mapping
+    user: "1000:1000"  # Run as non-root user
+    # Memory management
+    shm_size: "1gb"  # Shared memory for better performance
+
+volumes:
+  stable-vectorizer-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/docker/volumes/stable-data
+  stable-vectorizer-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind  
+      device: /var/lib/docker/volumes/stable-logs
+  stable-vectorizer-cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/docker/volumes/stable-cache
+  stable-vectorizer-tracker:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/docker/volumes/stable-tracker
+
+networks:
+  stable-vectorizer-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450

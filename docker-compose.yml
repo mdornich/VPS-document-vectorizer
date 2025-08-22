@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  document-vectorizer:
+    build: .
+    container_name: document-vectorizer
+    env_file:
+      - .env
+    ports:
+      - "5555:5555"  # Web dashboard
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - ./templates:/app/templates:ro
+      - document-downloads:/tmp/document_downloads
+      - tracker-data:/tmp
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - vectorizer-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5555/api/status')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add Redis for caching (production enhancement)
+  redis:
+    image: redis:7-alpine
+    container_name: vectorizer-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - vectorizer-network
+    profiles:
+      - with-cache
+
+volumes:
+  document-downloads:
+  tracker-data:
+  redis-data:
+
+networks:
+  vectorizer-network:
+    driver: bridge

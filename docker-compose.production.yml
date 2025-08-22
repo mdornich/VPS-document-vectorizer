@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  vectorizer:
+    build: .
+    image: document-vectorizer:latest
+    container_name: document-vectorizer
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${DASHBOARD_PORT:-5555}:5555"
+    volumes:
+      # Mount credentials
+      - ./credentials:/app/credentials:ro
+      # Mount templates for dashboard
+      - ./templates:/app/templates:ro
+      # Persistent data storage
+      - vectorizer-data:/app/data
+      # Logs
+      - vectorizer-logs:/app/logs
+    networks:
+      - vectorizer-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  vectorizer-data:
+    driver: local
+  vectorizer-logs:
+    driver: local
+
+networks:
+  vectorizer-network:
+    driver: bridge

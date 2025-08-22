@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  document-vectorizer:
+    build: .
+    container_name: document-vectorizer
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - document-downloads:/tmp/document_downloads
+    restart: always
+    environment:
+      - TZ=UTC
+      - ENABLE_MONITORING=true
+      - LOG_LEVEL=INFO
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - vectorizer-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+volumes:
+  document-downloads:
+    driver: local
+
+networks:
+  vectorizer-network:
+    driver: bridge
